@@ -17,7 +17,6 @@ var (
 	START_TIME     time.Time   //启动时间
 	globalCfg *gosupport.DataManage  //全局变量
 	globalIniCfg *ini.Config //全局ini配置
-
 )
 
 func init()  {
@@ -61,4 +60,9 @@ func commonActionInit(iniFile string)  {
 	globalCfg.Set("SERVER_LOGRUS_LASTFILE_DATE", time.Now().Format("20060102"))
 
 
+}
+
+func ExitMsg(msg string)  {
+	fmt.Println(gosupport.ToYellow(msg))
+	os.Exit(0)
 }
