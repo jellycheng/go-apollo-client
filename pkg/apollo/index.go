@@ -77,3 +77,24 @@ func FormQuery(queryArr map[string]string) string {
 	query, _ := url.ParseQuery(strings.Join(qu, "&"))
 	return query.Encode()
 }
+
+
+
+func JsonToEnvContent(jsonStr string) string  {
+	var retStr string
+	if jsonStr == "" {
+		return retStr
+	}
+	var envCfgMap map[string]interface{}
+	var sbObj strings.Builder
+
+	if err := json.Unmarshal([]byte(jsonStr), &envCfgMap);err == nil{
+		for k, v:= range envCfgMap {
+			line := fmt.Sprintf("%s=%s%s", k, v, LineBreak)
+			sbObj.WriteString(line)
+		}
+		retStr = sbObj.String()
+	}
+
+	return retStr
+}
