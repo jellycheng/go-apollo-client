@@ -16,6 +16,7 @@
 vendor
 .DS_Store
 output/
+env/
 .env
 go.sum
 common_test.go

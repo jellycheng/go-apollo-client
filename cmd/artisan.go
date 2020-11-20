@@ -19,7 +19,7 @@ var Artisan = cli.Command{
 	Flags: []cli.Flag{
 		stringFlag("config, c", "apollo_example.ini", "指定配置文件，默认apollo_example.ini"),
 		stringFlag("appid", "", "应用AppId"),
-		stringFlag("env", "", "环境代号，如dev、st、pre、prod等值"),
+		stringFlag("env", "", "环境代号，如DEV、ST、PRE、PROD等值"),
 		stringFlag("cluster", "default", "集群名代号，默认default"),
 		stringFlag("namespace", "application", "命名空间代号，默认application"),
 		stringFlag("func,f", "ApolloConsole", "指定执行的方法"),
@@ -41,7 +41,7 @@ func runCron(ctx *cli.Context) {
 		ExitMsg("请输入指定配置文件")
 	}
 	commonActionInit(iniFile)
-	logrus.Debug("启动artisan服务")
+	logrus.Debug("进入artisan服务")
 	var paramData = make(map[string]string)
 	paramData["ini_file"] = iniFile
 	paramData["appid"] = strings.TrimSpace(ctx.String("appid"))
@@ -60,6 +60,7 @@ func runCron(ctx *cli.Context) {
 		var jobFuncList = map[string]func(map[string]string, *ini.Config){
 			"TestConsole":   console.TestConsole,
 			"ApolloConsole": console.ApolloConsole,
+			"MonitorApolloConsole": console.MonitorApolloConsole,
 		}
 		if execFunc, ok := jobFuncList[f]; ok {
 			execFunc(paramData, globalIniCfg)

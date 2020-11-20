@@ -2,9 +2,11 @@ package apollo
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/jellycheng/gosupport/curl"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -28,6 +30,15 @@ func GetConfig4Cache(apolloHost, appId, clusterName, namespace, ip string) (stri
 	resObj, err := req.SetUrl(url).Get()
 	if err==nil {
 		body = resObj.GetBody()
+		statusCode := resObj.GetRaw().StatusCode
+		if statusCode == 404 {
+			var envCfgMap map[string]interface{}
+			errMsg := "获取失败"
+			if err := json.Unmarshal([]byte(body), &envCfgMap);err == nil{
+				errMsg = envCfgMap["message"].(string)
+			}
+			return body, errors.New(errMsg)
+		}
 		return body, nil
 	} else {
 		return body, err
@@ -36,19 +47,27 @@ func GetConfig4Cache(apolloHost, appId, clusterName, namespace, ip string) (stri
 }
 
 /**
-应用感知配置更新
+ * 应用感知配置更新,服务端会hold住请求60秒
+ * [{"namespaceName":"application","notificationId":-1}]
+ * http://10.30.60.129:8080/notifications/v2?appId=SampleApp&cluster=default&notifications=%5B%7B%22namespaceName%22%3A%22application%22%2C%22notificationId%22%3A-1%7D%5D
+ *
+curl -X GET \
+  'http://10.30.60.129:8080/notifications/v2?appId=SampleApp&cluster=default&notifications=%5B%7B%22namespaceName%22%3A%22application%22%2C%22notificationId%22%3A-1%7D%5D'
+
+返回示例：
+[{"namespaceName":"application","notificationId":4,"messages":{"details":{"SampleApp+default+application":4}}}]
 */
 func Notifications(apolloHost, appId, clusterName, notifications string) (bool, int64) {
 	query := map[string]string{
-		"appId":         appId,
-		"cluster":       clusterName,
-		"notifications": notifications,
-	}
-	url := fmt.Sprintf("%s/notifications/v2?%s",
-						apolloHost, FormQuery(query))
+								"appId":         appId,
+								"cluster":       clusterName,
+								"notifications": notifications,
+							}
+	url := fmt.Sprintf("%s/notifications/v2?%s", apolloHost, FormQuery(query))
 	response, err := http.Get(url)
 	if err != nil {
 		logrus.Error("Notifications Get#" + err.Error())
+		return false, 0
 	}
 	var body []struct {
 		Namespace      string `json:"namespace"`
@@ -90,11 +109,17 @@ func JsonToEnvContent(jsonStr string) string  {
 
 	if err := json.Unmarshal([]byte(jsonStr), &envCfgMap);err == nil{
 		for k, v:= range envCfgMap {
-			line := fmt.Sprintf("%s=%s%s", k, v, LineBreak)
+			line := fmt.Sprintf("%s=%v%s", k, v, LineBreak)
 			sbObj.WriteString(line)
 		}
 		retStr = sbObj.String()
 	}
 
 	return retStr
+}
+
+func CleanContentWrite(file, wireteString string) error {
+	var c = []byte(wireteString)
+	err := ioutil.WriteFile(file, c, 0666);
+	return err
 }
