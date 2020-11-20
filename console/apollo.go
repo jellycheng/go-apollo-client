@@ -86,9 +86,11 @@ func MonitorApolloConsole(param map[string]string, iniCfg *ini.Config)  {
 		paramData["env"] = env
 		paramData["cluster"] = cluster
 		paramData["namespace"] = namespace
+		var i int64
 		var noId int64
 		for {
-
+			i++
+			logrus.Debug(fmt.Sprintf("dev=%s,appid=%s,cluster=%s,第%d次监听", env, appId, cluster, i))
 			notificationsByte, _ := json.Marshal([]map[string]interface{}{
 												{
 													"namespaceName":  namespace,
