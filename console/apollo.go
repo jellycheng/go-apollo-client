@@ -43,7 +43,7 @@ func ApolloConsole(param map[string]string, iniCfg *ini.Config)  {
 				cmdHook := iniCfg.MustGetValue(env, "cmd_hook")
 				if cmdHook != "" {
 					//钩子接收的参数：环境代号、阿波罗项目名appid、集群名、命名空间名
-					if okmsg, failMsg, err := gosupport.ExecCmd(cmdHook, env, appId, cluster, namespace);err == nil {
+					if okmsg, failMsg, err := gosupport.ExecCmd(cmdHook, env, appId, cluster, namespace,envFile);err == nil {
 						if okmsg != "" {
 							fmt.Println(fmt.Sprintf("ok:%s", okmsg))
 						}
