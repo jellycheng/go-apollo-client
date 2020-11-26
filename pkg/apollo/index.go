@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/sirupsen/logrus"
+	"github.com/jellycheng/gosupport"
 	"github.com/jellycheng/gosupport/curl"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -57,7 +58,7 @@ curl -X GET \
 返回示例：
 [{"namespaceName":"application","notificationId":4,"messages":{"details":{"SampleApp+default+application":4}}}]
 */
-func Notifications(apolloHost, appId, clusterName, notifications string) (bool, int64) {
+func Notifications(apolloHost, appId, clusterName, notifications string) (bool, int64, error) {
 	query := map[string]string{
 								"appId":         appId,
 								"cluster":       clusterName,
@@ -67,7 +68,9 @@ func Notifications(apolloHost, appId, clusterName, notifications string) (bool, 
 	response, err := http.Get(url)
 	if err != nil {
 		logrus.Error("Notifications Get#" + err.Error())
-		return false, 0
+		return false, 0, err
+	} else {
+		logrus.Debug("apollo url: " + url)
 	}
 	var body []struct {
 		Namespace      string `json:"namespace"`
@@ -76,15 +79,17 @@ func Notifications(apolloHost, appId, clusterName, notifications string) (bool, 
 			Details map[string]int64 `json:"details"`
 		} `json:"messages"`
 	}
-
+	//200有变化、304没有变化、401未授权
 	if response.StatusCode == 200 {
 		err = json.NewDecoder(response.Body).Decode(&body)
 		if err != nil {
 			logrus.Error("Notifications Decode#" + err.Error())
+			return false, 0,err
 		}
-		return true, body[0].NotificationId
+		return true, body[0].NotificationId,nil
 	}
-	return false, 0
+	logrus.Debug("apollo响应状态码：" + gosupport.ToStr(response.StatusCode))
+	return false, 0,nil
 }
 
 

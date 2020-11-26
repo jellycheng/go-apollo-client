@@ -98,12 +98,17 @@ func MonitorApolloConsole(param map[string]string, iniCfg *ini.Config)  {
 												},
 											})
 			notifications := string(notificationsByte)
-			isUpdate, notificationId := apollo.Notifications(apolloHost, appId, cluster, notifications)
-			if isUpdate {
-				ApolloConsole(param, iniCfg)
-				noId = notificationId
-				logrus.Info(fmt.Sprintf("同步成功，%s,%s,%s,%s,%v", apolloHost, appId, cluster, namespace, notificationId))
+			if isUpdate, notificationId,err := apollo.Notifications(apolloHost, appId, cluster, notifications);err==nil {
+				if isUpdate {
+					ApolloConsole(param, iniCfg)
+					noId = notificationId
+					logrus.Info(fmt.Sprintf("同步成功，%s,%s,%s,%s,%v", apolloHost, appId, cluster, namespace, notificationId))
+				}
+			} else {
+				logrus.Error("apollo服务异常：", err.Error())
+				break
 			}
+
 		}
 
 	}  else {
